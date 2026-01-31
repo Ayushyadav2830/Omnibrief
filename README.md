@@ -2,7 +2,7 @@
 # ⚡ OmniBrief
 ### **Transform Hours of Content into Instant Insights**
 
-![OmniBrief Banner](https://via.placeholder.com/1200x400.png?text=OmniBrief+Dashboard+Preview)
+![OmniBrief Banner](public/dashboard-preview.png)
 
 > **OmniBrief** is a premium, AI-powered intelligence dashboard that analyzes your documents, images, audio, and videos to provide actionable summaries, key takeaways, and deep insights.
 
