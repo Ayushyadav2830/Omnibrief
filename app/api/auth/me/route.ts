@@ -7,13 +7,17 @@ export async function GET() {
         const payload = await getAuthUser();
 
         if (!payload) {
-            return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+            const res = NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+            res.cookies.delete('token');
+            return res;
         }
 
         const user = await findUserById(payload.userId);
 
         if (!user) {
-            return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
+            const res = NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
+            res.cookies.delete('token');
+            return res;
         }
 
         return NextResponse.json({

@@ -30,10 +30,12 @@ export default function DashboardPage() {
                     setUser(data.user);
                     fetchHistory();
                 } else {
-                    router.push('/auth/login');
+                    document.cookie = 'token=; Max-Age=0; path=/;';
+                    window.location.href = '/auth/login';
                 }
             } catch (err) {
-                router.push('/auth/login');
+                document.cookie = 'token=; Max-Age=0; path=/;';
+                window.location.href = '/auth/login';
             }
         };
 
