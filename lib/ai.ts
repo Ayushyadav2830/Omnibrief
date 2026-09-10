@@ -14,18 +14,14 @@ const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || '');
 // Model Candidate Lists for Auto-Fallback
 const TEXT_MODELS = [
     'llama-3.3-70b-versatile',
-    'llama-3.1-70b-versatile',
-    'llama-3.1-8b-instant',
-    'llama3-70b-8192',
-    'llama3-8b-8192',
-    'mixtral-8x7b-32768'
+    'llama-3.1-8b-instant'
 ];
 
 // Groq has no active vision models — image analysis uses Gemini only
 const VISION_MODELS_GROQ: string[] = [];
 
 const AUDIO_MODEL_GROQ = 'whisper-large-v3';
-const MEDIA_MODEL_GEMINI = 'gemini-3.6-flash'; // only active model on this API key
+const MEDIA_MODEL_GEMINI = 'gemini-3.6-flash'; // primary active model for text, images, docs, and media
 
 export interface AISummaryResult {
     summary: string;
@@ -77,6 +73,22 @@ Response Format (JSON):
   "keyPoints": ["Insight 1", "Insight 2", ...]
 }`;
 
+    // Primary: Use Google Gemini (gemini-3.6-flash) for ultra-fast, accurate text summaries
+    const apiKey = process.env.GOOGLE_AI_API_KEY;
+    if (apiKey && apiKey !== 'your_gemini_api_key_here') {
+        try {
+            console.log('[AI] Generating document text summary with Gemini...');
+            const model = genAI.getGenerativeModel({ model: MEDIA_MODEL_GEMINI });
+            const result = await model.generateContent(prompt);
+            const text = result.response.text();
+            const jsonMatch = text.match(/\{[\s\S]*\}/);
+            return parseAIResponse(jsonMatch ? jsonMatch[0] : text);
+        } catch (geminiError: any) {
+            console.warn('[AI] Gemini text summary failed, falling back to Groq:', geminiError?.message || geminiError);
+        }
+    }
+
+    // Fallback: Try Groq chat completion
     try {
         const text = await createGroqChatCompletion(prompt, true);
         return parseAIResponse(text);
@@ -85,7 +97,7 @@ Response Format (JSON):
 
         try {
             console.log('Retrying without strict JSON mode...');
-            const text = await createGroqChatCompletion(prompt + "\n\nPlease output valid JSON.", false);
+            const text = await createGroqChatCompletion(prompt + "\n\Please output valid JSON.", false);
             return parseAIResponse(text);
         } catch (retryError: any) {
             console.error('AI text summary retry failed:', retryError);
