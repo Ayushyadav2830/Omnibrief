@@ -53,51 +53,49 @@ export async function POST(request: NextRequest) {
         const isYouTube = /^(https?:\/\/)?(www\.|m\.)?(youtube\.com|youtu\.be)\/.+$/.test(url);
 
         if (isYouTube) {
-            console.log(`[URL] Processing YouTube URL with system yt-dlp: ${url}`);
-
-            // We aim for mp3 directly. 
-            // NOTE: yt-dlp enforces extension based on format, so we don't add .mp3 manually in output template unless we want double extension
-            // We use "%(id)s.%(ext)s" or just fixed ID if possible.
-            // Using ID based filename to avoid special chars issues in shell
+            console.log(`[URL] Processing YouTube URL: ${url}`);
             const outputBase = join(uploadsDir, fileId);
+            let downloaded = false;
 
+            // 1. Try system yt-dlp first
             try {
-                // 1. Get Metadata
-                // We use --dump-json. We pipe strictly to stdout.
                 const { stdout: jsonOutput } = await execAsync(`yt-dlp "${url}" --dump-json --no-warnings --no-playlist --prefer-free-formats --no-check-certificate`);
-
                 try {
-                    // Try to extract JSON from stdout (sometimes yt-dlp might output other strings if warnings leak)
-                    // We look for the first line that looks like JSON or parse the whole thing
                     const metadata = JSON.parse(jsonOutput);
                     if (metadata && metadata.title) {
                         originalName = `${metadata.title.replace(/[^\w\s]/gi, '')}.mp3`;
                     }
                 } catch (e) {
-                    console.warn('Failed to parse yt-dlp JSON metadata:', e);
                     originalName = `youtube_${fileId}.mp3`;
                 }
 
-                console.log(`[URL] Downloading content for: ${originalName}`);
-
-                // 2. Download Audio
-                // -x: extract audio
-                // --audio-format mp3
-                // -o "[path]/[id].%(ext)s"
-                // This ensures it saves as [fileId].mp3
-
                 const cmd = `yt-dlp "${url}" -x --audio-format mp3 --no-playlist --no-check-certificate --no-warnings -o "${outputBase}.%(ext)s"`;
                 await execAsync(cmd);
-
-                // Expected file should be at [fileId].mp3
                 tempFilePath = `${outputBase}.mp3`;
-
-            } catch (error: any) {
-                console.error('yt-dlp error:', error);
-                throw new Error(`Failed to download YouTube video: ${error.message}`);
+                mimeType = 'audio/mp3';
+                downloaded = true;
+            } catch (ytDlpError: any) {
+                console.warn('[URL] System yt-dlp unavailable/failed, using ytdl-core fallback:', ytDlpError?.message);
             }
 
-            mimeType = 'audio/mp3';
+            // 2. Pure JS Node.js fallback using @distube/ytdl-core if system yt-dlp fails or is missing
+            if (!downloaded) {
+                try {
+                    const info = await ytdl.getInfo(url);
+                    const title = info.videoDetails?.title ? info.videoDetails.title.replace(/[^\w\s]/gi, '') : fileId;
+                    originalName = `${title}.mp4`;
+                    tempFilePath = join(uploadsDir, `${fileId}.mp4`);
+
+                    const audioStream = ytdl(url, { filter: 'audioonly', quality: 'highestaudio' });
+                    const fileStream = createWriteStream(tempFilePath);
+                    await pipeline(audioStream, fileStream);
+                    mimeType = 'audio/mp4';
+                    downloaded = true;
+                } catch (ytdlError: any) {
+                    console.error('[URL] ytdl-core fallback failed:', ytdlError);
+                    throw new Error(`Failed to download YouTube video: ${ytdlError.message || 'Stream download failed'}`);
+                }
+            }
 
         } else {
             console.log(`[URL] Processing Generic URL: ${url}`);

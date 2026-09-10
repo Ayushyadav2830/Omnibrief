@@ -11,9 +11,21 @@ const groq = new Groq({
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || '');
 
-// Model Configuration
-const TEXT_MODEL = 'llama-3.3-70b-versatile';
-const VISION_MODEL = 'llama-3.2-11b-vision-preview';
+// Model Candidate Lists for Auto-Fallback
+const TEXT_MODELS = [
+    'llama-3.3-70b-versatile',
+    'llama-3.1-70b-versatile',
+    'llama-3.1-8b-instant',
+    'llama3-70b-8192',
+    'llama3-8b-8192',
+    'mixtral-8x7b-32768'
+];
+
+const VISION_MODELS = [
+    'llama-3.2-11b-vision-preview',
+    'llama-3.2-90b-vision-preview'
+];
+
 const AUDIO_MODEL_GROQ = 'whisper-large-v3';
 const MEDIA_MODEL_GEMINI = 'gemini-1.5-flash';
 
@@ -22,6 +34,31 @@ export interface AISummaryResult {
     keyPoints: string[];
     chapters?: { time: string; title: string; description: string }[];
     speakers?: { name: string; traits: string }[];
+}
+
+async function createGroqChatCompletion(prompt: string, jsonMode: boolean = true): Promise<string> {
+    let lastError: any = null;
+
+    for (const model of TEXT_MODELS) {
+        try {
+            const options: any = {
+                messages: [{ role: 'user', content: prompt }],
+                model: model,
+                temperature: 0.4,
+            };
+            if (jsonMode) {
+                options.response_format = { type: 'json_object' };
+            }
+            const completion = await groq.chat.completions.create(options);
+            const content = completion.choices[0]?.message?.content;
+            if (content) return content;
+        } catch (error: any) {
+            console.warn(`Groq model ${model} failed:`, error?.message || error);
+            lastError = error;
+            continue;
+        }
+    }
+    throw lastError || new Error('All Groq text models failed');
 }
 
 export async function generateSummary(content: string, fileType: string): Promise<AISummaryResult> {
@@ -43,14 +80,7 @@ Response Format (JSON):
 }`;
 
     try {
-        const completion = await groq.chat.completions.create({
-            messages: [{ role: 'user', content: prompt }],
-            model: TEXT_MODEL,
-            temperature: 0.4,
-            response_format: { type: 'json_object' }
-        });
-
-        const text = completion.choices[0]?.message?.content || '{}';
+        const text = await createGroqChatCompletion(prompt, true);
         return parseAIResponse(text);
     } catch (error: any) {
         console.error('AI text summary error (JSON mode):', error);
@@ -58,12 +88,7 @@ Response Format (JSON):
         // Fallback: Try without strict JSON validation
         try {
             console.log('Retrying without strict JSON mode...');
-            const completion = await groq.chat.completions.create({
-                messages: [{ role: 'user', content: prompt + "\n\nPlease output valid JSON." }],
-                model: TEXT_MODEL,
-                temperature: 0.4
-            });
-            const text = completion.choices[0]?.message?.content || '{}';
+            const text = await createGroqChatCompletion(prompt + "\n\nPlease output valid JSON.", false);
             return parseAIResponse(text);
         } catch (retryError: any) {
             console.error('AI text summary retry failed:', retryError);
@@ -123,7 +148,6 @@ export async function generateMediaSummary(filePath: string, mimeType: string): 
         const response = await result.response;
         const text = response.text();
 
-        // Clean up the response text from potential markdown blocks if AI includes them
         const jsonMatch = text.match(/\{[\s\S]*\}/);
         const jsonStr = jsonMatch ? jsonMatch[0] : text;
 
@@ -133,7 +157,6 @@ export async function generateMediaSummary(filePath: string, mimeType: string): 
         console.error('Gemini media analysis failed:', error);
         const geminiError = error.message || 'Unknown Gemini error';
 
-        // Last-resort fallback to Groq
         console.log('Falling back to Groq media analysis...');
         return generateGroqMediaSummary(filePath, geminiError);
     }
@@ -157,14 +180,8 @@ async function generateGroqMediaSummary(filePath: string, previousError?: string
         
         Transcript: ${transcript.substring(0, 15000)}`;
 
-        const completion = await groq.chat.completions.create({
-            messages: [{ role: 'user', content: summaryPrompt }],
-            model: TEXT_MODEL,
-            temperature: 0.4,
-            response_format: { type: 'json_object' }
-        });
-
-        return parseAIResponse(completion.choices[0]?.message?.content || '{}');
+        const text = await createGroqChatCompletion(summaryPrompt, true);
+        return parseAIResponse(text);
     } catch (error: any) {
         console.error('Groq media analysis failed:', error);
 
@@ -185,35 +202,42 @@ export async function generateImageSummary(base64Image: string, mimeType: string
     const prompt = `Analyze this image. Output JSON: { "summary": String, "keyPoints": Array }`;
     const imageUrl = `data:${mimeType};base64,${base64Image}`;
 
-    try {
-        const completion = await groq.chat.completions.create({
-            messages: [
-                {
-                    role: 'user',
-                    content: [
-                        { type: 'text', text: prompt },
-                        { type: 'image_url', image_url: { url: imageUrl } }
-                    ]
-                }
-            ],
-            model: VISION_MODEL,
-            temperature: 0.4,
-            response_format: { type: 'json_object' }
-        });
+    let lastError: any = null;
+    for (const model of VISION_MODELS) {
+        try {
+            const completion = await groq.chat.completions.create({
+                messages: [
+                    {
+                        role: 'user',
+                        content: [
+                            { type: 'text', text: prompt },
+                            { type: 'image_url', image_url: { url: imageUrl } }
+                        ]
+                    }
+                ],
+                model: model,
+                temperature: 0.4,
+                response_format: { type: 'json_object' }
+            });
 
-        return parseAIResponse(completion.choices[0]?.message?.content || '{}');
-    } catch (error: any) {
-        console.error('Image analysis failed:', error);
-        return {
-            summary: `Failed to analyze image. Error: ${error.message || 'Unknown error'}`,
-            keyPoints: []
-        };
+            const content = completion.choices[0]?.message?.content || '{}';
+            return parseAIResponse(content);
+        } catch (error: any) {
+            console.warn(`Vision model ${model} failed:`, error?.message || error);
+            lastError = error;
+            continue;
+        }
     }
+
+    console.error('All vision models failed:', lastError);
+    return {
+        summary: `Failed to analyze image. Error: ${lastError?.message || 'Unknown error'}`,
+        keyPoints: []
+    };
 }
 
 function parseAIResponse(text: string): AISummaryResult {
     try {
-        // Simple JSON cleaning
         const cleaned = text.replace(/```json\n?|\n?```/g, '').trim();
         const parsed = JSON.parse(cleaned);
         return {
