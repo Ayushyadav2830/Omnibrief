@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "test": "vitest run"
   },
@@ -21,7 +21,7 @@
     "html-to-text": "^9.0.5",
     "jsonwebtoken": "^9.0.2",
     "mammoth": "^1.8.0",
-    "next": "^16.3.4",
+    "next": "15.1.7",
     "pdf-lib": "^1.17.1",
     "pdf-parse": "^1.1.1",
     "react": "19.0.0",
