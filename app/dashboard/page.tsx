@@ -17,7 +17,10 @@ export default function DashboardPage() {
     const [error, setError] = useState('');
     const [activeTab, setActiveTab] = useState<'upload' | 'history'>('upload');
 
+    const [mounted, setMounted] = useState(false);
+
     useEffect(() => {
+        setMounted(true);
         const checkSession = async () => {
             try {
                 const response = await fetch('/api/auth/me');
@@ -220,26 +223,32 @@ export default function DashboardPage() {
         }
     };
 
-    if (!user) {
+    if (!mounted || !user) {
         return (
-            <div style={{
-                minHeight: '100vh',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '1rem',
-                color: 'var(--text-secondary)'
-            }}>
-                <div style={{
-                    width: '40px',
-                    height: '40px',
-                    border: '3px solid rgba(255, 255, 255, 0.1)',
-                    borderTopColor: '#6366f1',
-                    borderRadius: '50%',
-                    animation: 'spin 1s linear infinite'
-                }} />
-                <p style={{ fontSize: '0.95rem' }}>Verifying session... Redirecting to login.</p>
+            <div
+                suppressHydrationWarning
+                style={{
+                    minHeight: '100vh',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '1rem',
+                    color: 'var(--text-secondary)'
+                }}
+            >
+                <div
+                    suppressHydrationWarning
+                    style={{
+                        width: '40px',
+                        height: '40px',
+                        border: '3px solid rgba(255, 255, 255, 0.1)',
+                        borderTopColor: '#6366f1',
+                        borderRadius: '50%',
+                        animation: 'spin 1s linear infinite'
+                    }}
+                />
+                <p suppressHydrationWarning style={{ fontSize: '0.95rem' }}>Verifying session... Redirecting to login.</p>
             </div>
         );
     }
