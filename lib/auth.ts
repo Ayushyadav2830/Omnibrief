@@ -1,7 +1,9 @@
 import jwt from 'jsonwebtoken';
 import { cookies } from 'next/headers';
+import { getEnv } from './env';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key-32-chars-at-least-123456';
+const JWT_SECRET = getEnv().JWT_SECRET;
+
 
 export interface TokenPayload {
     userId: string;

@@ -93,7 +93,66 @@ Start the development server:
 npm run dev
 ```
 
-Open **[http://localhost:3000](http://localhost:3000)** in your browser and start analyzing!
+### 5️⃣ Run Unit Tests
+
+Execute the Vitest suite to verify environment validation, rate limiting, authentication, and database logic:
+
+```bash
+npm test
+```
+
+---
+
+## 🏗️ Architecture & Request Flow
+
+Below is the complete request flow and data processing pipeline of OmniBrief:
+
+```mermaid
+flowchart TD
+    subgraph Client ["Client Layer"]
+        User["User / Web Browser"]
+        UI["Next.js Glassmorphism UI (Dashboard & Auth)"]
+    end
+
+    subgraph Server ["Next.js Server & API Routes"]
+        MW["Middleware (Auth Cookie Validation)"]
+        RL["Rate Limiter (lib/rate-limit.ts)"]
+        ENV["Zod Env Validator (lib/env.ts)"]
+        
+        subgraph Endpoints ["API Routes"]
+            AuthAPI["/api/auth (Login/Register)"]
+            UploadAPI["/api/upload"]
+            URLAPI["/api/process-url"]
+            HistAPI["/api/history"]
+        end
+    end
+
+    subgraph Pipeline ["Processing Engine"]
+        YTDLP["yt-dlp (YouTube Extraction)"]
+        FFMPEG["ffmpeg (Audio Compression/Normalization)"]
+        PARSERS["pdf-parse / mammoth (Doc Extraction)"]
+    end
+
+    subgraph AI ["Dual AI Orchestration Engine"]
+        GROQ["Groq API (Llama 3.3 & Whisper-v3)"]
+        GEMINI["Google Gemini 1.5 Flash (Multimodal & Chapters)"]
+    end
+
+    subgraph Storage ["Persistence Layer"]
+        DB["Local JSON Database (users.json & summaries.json)"]
+    end
+
+    User --> UI
+    UI --> MW
+    MW --> RL
+    RL --> ENV
+    ENV --> Endpoints
+    UploadAPI --> Pipeline
+    URLAPI --> Pipeline
+    Pipeline --> AI
+    AI --> Storage
+    Storage --> UI
+```
 
 ---
 
@@ -103,6 +162,9 @@ OmniBrief is built with a modern, scalable stack:
 
 - **Frontend**: Next.js 15, React 19, CSS Modules (Custom Glassmorphism Design System)
 - **Backend**: Next.js API Routes (Serverless-ready architecture)
+- **Security & Reliability**:
+  - **Rate Limiting**: Sliding window protection (`lib/rate-limit.ts`) returning standard `429 Too Many Requests`
+  - **Env Validation**: Strict Zod schema checking (`lib/env.ts`) on startup
 - **Processing**:
   - `ffmpeg` / `fluent-ffmpeg`: Media compression & normalization
   - `yt-dlp`: Direct high-speed YouTube audio extraction
@@ -110,6 +172,7 @@ OmniBrief is built with a modern, scalable stack:
 - **AI Layers**:
   - **Orchestration**: Custom fallback logic ensuring 99.9% reliability
   - **Models**: Llama 3.3 (Text), Whisper-v3 (Audio), Gemini 1.5 Flash (Multimodal)
+- **Testing**: Vitest test suite (`__tests__/`) for unit coverage
 
 ---
 

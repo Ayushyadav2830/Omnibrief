@@ -11,11 +11,18 @@ import ytdl from '@distube/ytdl-core'; // Keeping validURL check or simple regex
 import { getAuthUser } from '@/lib/auth';
 import { saveSummary } from '@/lib/database';
 import { processFileWithAI } from '@/lib/file-processing';
+import { checkRateLimit, getClientIp, createRateLimitResponse } from '@/lib/rate-limit';
 
 const execAsync = promisify(exec);
 export const maxDuration = 300; // 5 minutes timeout for processing
 
 export async function POST(request: NextRequest) {
+    const ip = getClientIp(request);
+    const rateLimit = checkRateLimit(`process-url:${ip}`, { limit: 10, windowMs: 60 * 1000 });
+    if (!rateLimit.success) {
+        return createRateLimitResponse(rateLimit.reset);
+    }
+
     const startTime = Date.now();
     let tempFilePath = '';
 

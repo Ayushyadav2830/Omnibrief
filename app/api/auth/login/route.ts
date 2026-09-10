@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { findUserByEmail } from '@/lib/database';
 import { generateToken } from '@/lib/auth';
+import { checkRateLimit, getClientIp, createRateLimitResponse } from '@/lib/rate-limit';
 
 const loginSchema = z.object({
     email: z.string().email('Invalid email address'),
@@ -10,6 +11,12 @@ const loginSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+    const ip = getClientIp(request);
+    const rateLimit = checkRateLimit(`login:${ip}`, { limit: 10, windowMs: 60 * 1000 });
+    if (!rateLimit.success) {
+        return createRateLimitResponse(rateLimit.reset);
+    }
+
     try {
         const body = await request.json();
         const validation = loginSchema.safeParse(body);

@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { saveUser, findUserByEmail } from '@/lib/database';
 import { generateToken } from '@/lib/auth';
 import { randomUUID } from 'crypto';
+import { checkRateLimit, getClientIp, createRateLimitResponse } from '@/lib/rate-limit';
 
 const registerSchema = z.object({
     name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -12,6 +13,12 @@ const registerSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+    const ip = getClientIp(request);
+    const rateLimit = checkRateLimit(`register:${ip}`, { limit: 10, windowMs: 60 * 1000 });
+    if (!rateLimit.success) {
+        return createRateLimitResponse(rateLimit.reset);
+    }
+
     try {
         const body = await request.json();
         const validation = registerSchema.safeParse(body);

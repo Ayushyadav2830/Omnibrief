@@ -97,7 +97,7 @@ export default function DashboardPage() {
                 setUrlInput('');
                 await fetchHistory();
             } else {
-                throw new Error(data.error || 'Failed to process URL');
+                throw new Error(data.message || data.error || 'Failed to process URL');
             }
         } catch (err: any) {
             clearInterval(progressInterval);
@@ -149,7 +149,7 @@ export default function DashboardPage() {
                     } else {
                         try {
                             const errorData = JSON.parse(xhr.responseText);
-                            reject(new Error(errorData.error || 'Upload failed'));
+                            reject(new Error(errorData.message || errorData.error || `Upload failed with status ${xhr.status}`));
                         } catch {
                             reject(new Error(`Upload failed with status ${xhr.status}`));
                         }

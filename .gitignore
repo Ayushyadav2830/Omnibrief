@@ -39,3 +39,14 @@ next-env.d.ts
 
 # database
 /data/*.json
+
+# temporary & media files
+/tmp
+/scratch
+*.mp3
+*.wav
+*.m4a
+*.mp4
+*.mov
+*.avi
+*-player-script.js

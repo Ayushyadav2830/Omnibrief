@@ -5,8 +5,15 @@ import { randomUUID } from 'crypto';
 import { getAuthUser } from '@/lib/auth';
 import { saveSummary } from '@/lib/database';
 import { processFileWithAI } from '@/lib/file-processing';
+import { checkRateLimit, getClientIp, createRateLimitResponse } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
+    const ip = getClientIp(request);
+    const rateLimit = checkRateLimit(`upload:${ip}`, { limit: 10, windowMs: 60 * 1000 });
+    if (!rateLimit.success) {
+        return createRateLimitResponse(rateLimit.reset);
+    }
+
     const startTime = Date.now();
     let filePath = '';
 
