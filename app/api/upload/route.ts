@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { writeFile, mkdir, unlink } from 'fs/promises';
 import { join } from 'path';
+import { tmpdir } from 'os';
 import { randomUUID } from 'crypto';
 import { getAuthUser } from '@/lib/auth';
 import { saveSummary } from '@/lib/database';
@@ -34,8 +35,10 @@ export async function POST(request: NextRequest) {
         const bytes = await file.arrayBuffer();
         const buffer = Buffer.from(bytes);
 
-        // Create uploads directory
-        const uploadsDir = join(process.cwd(), 'uploads');
+        // Create uploads directory (using tmpdir on serverless / Vercel)
+        const uploadsDir = process.env.VERCEL || process.env.NODE_ENV === 'production'
+            ? join(tmpdir(), 'uploads')
+            : join(process.cwd(), 'uploads');
         await mkdir(uploadsDir, { recursive: true });
 
         // Save file

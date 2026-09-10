@@ -1,40 +1,81 @@
 import fs from 'fs/promises';
 import path from 'path';
+import os from 'os';
 import { User, Summary } from '@/types';
 
-const DATA_DIR = path.join(process.cwd(), 'data');
-const USERS_FILE = path.join(DATA_DIR, 'users.json');
-const SUMMARIES_FILE = path.join(DATA_DIR, 'summaries.json');
+let inMemoryUsers: User[] = [];
+let inMemorySummaries: Summary[] = [];
+let isInMemoryFallback = false;
 
-// Ensure data directory exists
+function getDataDir(): string {
+    if (process.env.VERCEL || process.env.NODE_ENV === 'production') {
+        return path.join(os.tmpdir(), 'omnibrief-data');
+    }
+    return path.join(process.cwd(), 'data');
+}
+
+function getUsersFile() {
+    return path.join(getDataDir(), 'users.json');
+}
+
+function getSummariesFile() {
+    return path.join(getDataDir(), 'summaries.json');
+}
+
 async function ensureDataDir() {
+    const dir = getDataDir();
     try {
-        await fs.access(DATA_DIR);
+        await fs.access(dir);
     } catch {
-        await fs.mkdir(DATA_DIR, { recursive: true });
+        try {
+            await fs.mkdir(dir, { recursive: true });
+        } catch {
+            isInMemoryFallback = true;
+        }
     }
 }
 
 // User operations
 export async function getUsers(): Promise<User[]> {
+    if (isInMemoryFallback) return inMemoryUsers;
     await ensureDataDir();
     try {
-        const data = await fs.readFile(USERS_FILE, 'utf-8');
-        return JSON.parse(data);
+        const usersFile = getUsersFile();
+        const data = await fs.readFile(usersFile, 'utf-8');
+        const parsed = JSON.parse(data);
+        if (Array.isArray(parsed)) {
+            inMemoryUsers = parsed;
+            return parsed;
+        }
+        return inMemoryUsers;
     } catch {
-        return [];
+        try {
+            const localFile = path.join(process.cwd(), 'data', 'users.json');
+            const localData = await fs.readFile(localFile, 'utf-8');
+            inMemoryUsers = JSON.parse(localData);
+            return inMemoryUsers;
+        } catch {
+            return inMemoryUsers;
+        }
     }
 }
 
 export async function saveUser(user: User): Promise<void> {
     const users = await getUsers();
     users.push(user);
-    await fs.writeFile(USERS_FILE, JSON.stringify(users, null, 2));
+    inMemoryUsers = users;
+    await ensureDataDir();
+    try {
+        await fs.writeFile(getUsersFile(), JSON.stringify(users, null, 2));
+    } catch (e) {
+        console.warn('Failed writing user to filesystem, using in-memory store:', e);
+        isInMemoryFallback = true;
+    }
 }
 
 export async function findUserByEmail(email: string): Promise<User | null> {
     const users = await getUsers();
-    return users.find(u => u.email === email) || null;
+    return users.find(u => u.email.toLowerCase() === email.toLowerCase()) || null;
 }
 
 export async function findUserById(id: string): Promise<User | null> {
@@ -44,19 +85,39 @@ export async function findUserById(id: string): Promise<User | null> {
 
 // Summary operations
 export async function getSummaries(): Promise<Summary[]> {
+    if (isInMemoryFallback) return inMemorySummaries;
     await ensureDataDir();
     try {
-        const data = await fs.readFile(SUMMARIES_FILE, 'utf-8');
-        return JSON.parse(data);
+        const data = await fs.readFile(getSummariesFile(), 'utf-8');
+        const parsed = JSON.parse(data);
+        if (Array.isArray(parsed)) {
+            inMemorySummaries = parsed;
+            return parsed;
+        }
+        return inMemorySummaries;
     } catch {
-        return [];
+        try {
+            const localFile = path.join(process.cwd(), 'data', 'summaries.json');
+            const localData = await fs.readFile(localFile, 'utf-8');
+            inMemorySummaries = JSON.parse(localData);
+            return inMemorySummaries;
+        } catch {
+            return inMemorySummaries;
+        }
     }
 }
 
 export async function saveSummary(summary: Summary): Promise<void> {
     const summaries = await getSummaries();
     summaries.push(summary);
-    await fs.writeFile(SUMMARIES_FILE, JSON.stringify(summaries, null, 2));
+    inMemorySummaries = summaries;
+    await ensureDataDir();
+    try {
+        await fs.writeFile(getSummariesFile(), JSON.stringify(summaries, null, 2));
+    } catch (e) {
+        console.warn('Failed writing summary to filesystem, using in-memory store:', e);
+        isInMemoryFallback = true;
+    }
 }
 
 export async function getUserSummaries(userId: string): Promise<Summary[]> {
@@ -78,6 +139,11 @@ export async function deleteSummary(id: string, userId: string): Promise<boolean
     if (index === -1) return false;
 
     summaries.splice(index, 1);
-    await fs.writeFile(SUMMARIES_FILE, JSON.stringify(summaries, null, 2));
+    inMemorySummaries = summaries;
+    try {
+        await fs.writeFile(getSummariesFile(), JSON.stringify(summaries, null, 2));
+    } catch (e) {
+        isInMemoryFallback = true;
+    }
     return true;
 }
