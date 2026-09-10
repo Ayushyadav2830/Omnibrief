@@ -79,29 +79,17 @@ export async function processFileWithAI(filePath: string, mimeType: string, file
                 console.log(`Text extraction failed for ${mimeType}, trying fallback...`);
             }
 
-            if (!content || content.trim().length < 50) {
-                // FALLBACK: Try to extract images from PDF (Scanned PDF Support)
+            if (!content || content.trim().length < 30) {
                 if (mimeType === 'application/pdf') {
-                    console.log('Text signal weak. Attempting to extract embedded images from PDF...');
-                    const { extractImagesFromPDF } = await import('@/lib/document-processor');
-                    const images = await extractImagesFromPDF(filePath);
-
-                    if (images.length > 0) {
-                        // Found embedded images! Send the first one to Vision AI.
-                        // Note: We currently only support the first page/image to keep it simple.
-                        // extractImagesFromPDF returns base64 or you might need to handle it. 
-                        // Wait, pdf-lib extracts raw bytes. We need to convert to base64.
-                        // Actually, my extractImagesFromPDF implementation was a placeholder because pdf-lib image extraction is complex.
-                        // Let's assume for this specific step we return the original error message unless we implemented the image extraction fully.
-                        // Since I haven't implemented robust image extraction (it returns []), we will stick to the smart error message.
-                    }
+                    console.log('[Processing] Scanned PDF / weak text signal detected. Routing to Multimodal PDF Vision AI...');
+                    const { generatePDFVisionSummary } = await import('@/lib/ai');
+                    summaryData = await generatePDFVisionSummary(filePath);
+                } else {
+                    throw new Error("Weak Signal: Document appears to be empty or contains no readable text.");
                 }
-
-                // If scanned PDF detection failed or no images found:
-                throw new Error("⚠️ Weak Signal: This document appears to be empty or an image-only scan (without text). OmniBrief currently analyzes text-based documents. \n\n💡 Solution: Please take a screenshot of the document pages and upload them as Images (.jpg/.png) for our Vision AI to analyze!");
+            } else {
+                summaryData = await generateSummary(content, fileType);
             }
-
-            summaryData = await generateSummary(content, fileType);
         } else if (mimeType.startsWith('audio/') || mimeType.startsWith('video/')) {
             fileType = mimeType.startsWith('audio/') ? 'audio' : 'video';
 

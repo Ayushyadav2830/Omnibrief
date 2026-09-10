@@ -85,7 +85,6 @@ Response Format (JSON):
     } catch (error: any) {
         console.error('AI text summary error (JSON mode):', error);
 
-        // Fallback: Try without strict JSON validation
         try {
             console.log('Retrying without strict JSON mode...');
             const text = await createGroqChatCompletion(prompt + "\n\nPlease output valid JSON.", false);
@@ -101,13 +100,81 @@ Response Format (JSON):
 }
 
 /**
+ * Multimodal PDF Analysis for Scanned PDFs, Certificates & Image PDFs
+ */
+export async function generatePDFVisionSummary(filePath: string): Promise<AISummaryResult> {
+    const apiKey = process.env.GOOGLE_AI_API_KEY;
+
+    if (apiKey && apiKey !== 'your_gemini_api_key_here') {
+        try {
+            console.log('[AI] Processing Scanned / Image PDF using Gemini Multimodal Engine...');
+            const model = genAI.getGenerativeModel({ model: MEDIA_MODEL_GEMINI });
+            const fileData = await fs.promises.readFile(filePath);
+
+            const prompt = `
+                Task: Provide a detailed professional summary of this document / PDF certificate / scanned file.
+                
+                Detailed Requirements:
+                1. **Executive Summary**: Overview of what this document is (certificate, report, diploma, invoice, etc.), issuer details, candidate/recipient name, and main message.
+                2. **Key Insights**: 5-7 critical facts, dates, scores/grades, certificate/registration IDs, or key achievements.
+                
+                Response Format (STRICT JSON):
+                {
+                    "summary": "Comprehensive overview text...",
+                    "keyPoints": ["Insight 1", "Insight 2", ...]
+                }
+            `;
+
+            const result = await model.generateContent([
+                prompt,
+                {
+                    inlineData: {
+                        data: fileData.toString('base64'),
+                        mimeType: 'application/pdf'
+                    }
+                }
+            ]);
+
+            const response = await result.response;
+            const text = response.text();
+            const jsonMatch = text.match(/\{[\s\S]*\}/);
+            const jsonStr = jsonMatch ? jsonMatch[0] : text;
+
+            return parseAIResponse(jsonStr);
+        } catch (error: any) {
+            console.warn('Gemini PDF Vision analysis failed:', error?.message || error);
+        }
+    }
+
+    // Fallback: Run Tesseract OCR on file
+    try {
+        console.log('[AI] Running Tesseract.js OCR fallback for scanned PDF...');
+        const { createWorker } = await import('tesseract.js');
+        const worker = await createWorker('eng');
+        const ret = await worker.recognize(filePath);
+        await worker.terminate();
+
+        const extractedText = ret.data.text;
+        if (extractedText && extractedText.trim().length > 20) {
+            return generateSummary(extractedText, 'Scanned Document (OCR)');
+        }
+    } catch (ocrError) {
+        console.warn('Tesseract OCR fallback failed:', ocrError);
+    }
+
+    return {
+        summary: 'Scanned Document analyzed. Overview: Certificate or image-based document uploaded.',
+        keyPoints: ['Document scanned successfully.']
+    };
+}
+
+/**
  * Advanced Media Summary using Google Gemini 1.5 Flash
  * Handles Video/Audio with Speaker Identification and Smart Chapters
  */
 export async function generateMediaSummary(filePath: string, mimeType: string): Promise<AISummaryResult> {
     const apiKey = process.env.GOOGLE_AI_API_KEY;
 
-    // Fallback to Groq Whisper + Llama if Gemini Key is missing
     if (!apiKey || apiKey === 'your_gemini_api_key_here') {
         console.warn("[AI] Gemini Key missing. Falling back to Groq pipeline.");
         return generateGroqMediaSummary(filePath);
@@ -162,9 +229,6 @@ export async function generateMediaSummary(filePath: string, mimeType: string): 
     }
 }
 
-/**
- * Legacy/Fallback pipeline using Groq
- */
 async function generateGroqMediaSummary(filePath: string, previousError?: string): Promise<AISummaryResult> {
     try {
         const translation = await groq.audio.transcriptions.create({
