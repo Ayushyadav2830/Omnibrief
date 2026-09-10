@@ -13,8 +13,9 @@ const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || '');
 
 // Model Candidate Lists for Auto-Fallback
 const TEXT_MODELS = [
-    'llama-3.3-70b-versatile',
-    'llama-3.1-8b-instant'
+    'openai/gpt-oss-20b',
+    'groq/compound',
+    'qwen/qwen3.6-27b'
 ];
 
 // Groq has no active vision models — image analysis uses Gemini only

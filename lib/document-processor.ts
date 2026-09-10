@@ -73,18 +73,45 @@ export async function extractTextFromHTML(filePath: string): Promise<string> {
 
 export async function extractTextFromDocument(filePath: string, mimeType: string): Promise<string> {
     const type = mimeType.split(';')[0].trim().toLowerCase();
+    const ext = filePath.split('.').pop()?.toLowerCase() || '';
 
-    if (type === 'application/pdf') {
+    if (type === 'application/pdf' || ext === 'pdf') {
         return extractTextFromPDF(filePath);
-    } else if (type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+    } else if (
+        type.includes('wordprocessingml') ||
+        type.includes('msword') ||
+        type.includes('officedocument') ||
+        ext === 'docx' ||
+        ext === 'doc'
+    ) {
         return extractTextFromDOCX(filePath);
-    } else if (type === 'text/plain' || type === 'text/csv' || type === 'application/json' || type === 'text/markdown' || type === 'application/xml' || type.endsWith('xml') || type.endsWith('json')) {
+    } else if (
+        type === 'text/plain' ||
+        type === 'text/csv' ||
+        type === 'application/json' ||
+        type === 'text/markdown' ||
+        type === 'application/xml' ||
+        type.endsWith('xml') ||
+        type.endsWith('json') ||
+        ext === 'txt' ||
+        ext === 'csv' ||
+        ext === 'json' ||
+        ext === 'md'
+    ) {
         // Universal Text Support (CSV, JSON, Logs, Code, XML)
         return extractTextFromTXT(filePath);
-    } else if (type === 'text/html') {
+    } else if (type === 'text/html' || ext === 'html' || ext === 'htm') {
         return extractTextFromHTML(filePath);
     } else {
-        // Try to read as text anyway for unknown types (system logs etc)
+        // First try mammoth if it might be a word document
+        try {
+            const docxResult = await extractTextFromDOCX(filePath);
+            if (docxResult && docxResult.trim().length > 10) {
+                return docxResult;
+            }
+        } catch { }
+
+        // Fallback to text reading
         try {
             return await extractTextFromTXT(filePath);
         } catch {
