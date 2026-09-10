@@ -1,0 +1,33 @@
+name: CI Build & Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Run Vitest Unit Tests
+        run: npm test
+
+      - name: Build Next.js Application
+        run: npm run build
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY || 'mock_groq_api_key_for_ci_build' }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET || 'mock_jwt_secret_for_ci_build_at_least_32bytes' }}
