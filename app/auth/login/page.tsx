@@ -39,7 +39,7 @@ export default function LoginPage() {
     };
 
     return (
-        <div style={{
+        <div suppressHydrationWarning style={{
             minHeight: '100vh',
             display: 'flex',
             alignItems: 'center',
@@ -48,13 +48,13 @@ export default function LoginPage() {
             position: 'relative',
             zIndex: 1
         }}>
-            <div className="glass-card animate-fade-in" style={{
+            <div suppressHydrationWarning className="glass-card animate-fade-in" style={{
                 width: '100%',
                 maxWidth: '450px',
                 padding: '3rem'
             }}>
                 {/* Header */}
-                <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                <div suppressHydrationWarning style={{ textAlign: 'center', marginBottom: '2rem' }}>
                     <h1 style={{ fontSize: '2.5rem', fontWeight: 700, marginBottom: '0.5rem' }} className="gradient-text">
                         Welcome Back
                     </h1>
