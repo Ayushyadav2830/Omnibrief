@@ -220,7 +220,29 @@ export default function DashboardPage() {
         }
     };
 
-    if (!user) return null;
+    if (!user) {
+        return (
+            <div style={{
+                minHeight: '100vh',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '1rem',
+                color: 'var(--text-secondary)'
+            }}>
+                <div style={{
+                    width: '40px',
+                    height: '40px',
+                    border: '3px solid rgba(255, 255, 255, 0.1)',
+                    borderTopColor: '#6366f1',
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite'
+                }} />
+                <p style={{ fontSize: '0.95rem' }}>Verifying session... Redirecting to login.</p>
+            </div>
+        );
+    }
 
     return (
         <div style={{ minHeight: '100vh', position: 'relative', zIndex: 1 }}>
