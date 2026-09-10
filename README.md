@@ -2,12 +2,10 @@
 # ⚡ OmniBrief
 ### **Transform Hours of Content into Instant Insights**
 
-[![CI Build & Test](https://github.com/Ayushyadav2830/Omnibrief/actions/workflows/ci.yml/badge.svg)](https://github.com/Ayushyadav2830/Omnibrief/actions) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) [![Live Demo](https://img.shields.io/badge/Live_Demo-Vercel-000000?style=flat&logo=vercel)](https://omnibrief-six.vercel.app)
-
+[![CI Build & Test](https://github.com/Ayushyadav2830/Omnibrief/actions/workflows/ci.yml/badge.svg)](https://github.com/Ayushyadav2830/Omnibrief/actions) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ![OmniBrief Banner](public/dashboard-preview.png)
 
-> 🚀 **Live Demo**: [https://omnibrief-six.vercel.app](https://omnibrief-six.vercel.app)  
 > **OmniBrief** is a premium, AI-powered intelligence dashboard that analyzes your documents, images, audio, and videos to provide actionable summaries, key takeaways, and deep insights.
 
 ---
