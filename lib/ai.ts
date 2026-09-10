@@ -21,13 +21,11 @@ const TEXT_MODELS = [
     'mixtral-8x7b-32768'
 ];
 
-const VISION_MODELS = [
-    'llama-3.2-11b-vision-preview',
-    'llama-3.2-90b-vision-preview'
-];
+// Groq has no active vision models — image analysis uses Gemini only
+const VISION_MODELS_GROQ: string[] = [];
 
 const AUDIO_MODEL_GROQ = 'whisper-large-v3';
-const MEDIA_MODEL_GEMINI = 'gemini-1.5-flash';
+const MEDIA_MODEL_GEMINI = 'gemini-3.6-flash'; // only active model on this API key
 
 export interface AISummaryResult {
     summary: string;
@@ -263,37 +261,52 @@ async function generateGroqMediaSummary(filePath: string, previousError?: string
 }
 
 export async function generateImageSummary(base64Image: string, mimeType: string): Promise<AISummaryResult> {
-    const prompt = `Analyze this image. Output JSON: { "summary": String, "keyPoints": Array }`;
-    const imageUrl = `data:${mimeType};base64,${base64Image}`;
+    const imagePrompt = `Task: Provide a detailed professional analysis of this image.
+
+Requirements:
+1. Executive Summary: Describe what this image shows, its purpose, and key information (max 150 words).
+2. Key Insights: 5-7 bullet points extracting the most important facts, data, labels, or details visible.
+
+Response Format (STRICT JSON):
+{
+  "summary": "Comprehensive description...",
+  "keyPoints": ["Insight 1", "Insight 2", ...]
+}`;
+
+    // Gemini is the only working vision API — Groq has decommissioned all vision models
+    const apiKey = process.env.GOOGLE_AI_API_KEY;
+    if (!apiKey || apiKey === 'your_gemini_api_key_here') {
+        return {
+            summary: 'Image analysis requires a Google Gemini API key. Please add GOOGLE_AI_API_KEY to your .env.local file.',
+            keyPoints: ['Visit https://aistudio.google.com/app/apikey to get a free Gemini API key.']
+        };
+    }
+
+    // gemini-3.6-flash is confirmed working; others fallback in case of API changes
+    const geminiModels = [
+        'gemini-3.6-flash',
+        MEDIA_MODEL_GEMINI,
+    ];
 
     let lastError: any = null;
-    for (const model of VISION_MODELS) {
+    for (const modelName of geminiModels) {
         try {
-            const completion = await groq.chat.completions.create({
-                messages: [
-                    {
-                        role: 'user',
-                        content: [
-                            { type: 'text', text: prompt },
-                            { type: 'image_url', image_url: { url: imageUrl } }
-                        ]
-                    }
-                ],
-                model: model,
-                temperature: 0.4,
-                response_format: { type: 'json_object' }
-            });
-
-            const content = completion.choices[0]?.message?.content || '{}';
-            return parseAIResponse(content);
-        } catch (error: any) {
-            console.warn(`Vision model ${model} failed:`, error?.message || error);
-            lastError = error;
-            continue;
+            console.log(`[AI] Analyzing image with Gemini model: ${modelName}`);
+            const model = genAI.getGenerativeModel({ model: modelName });
+            const result = await model.generateContent([
+                imagePrompt,
+                { inlineData: { data: base64Image, mimeType } }
+            ]);
+            const text = result.response.text();
+            const jsonMatch = text.match(/\{[\s\S]*\}/);
+            return parseAIResponse(jsonMatch ? jsonMatch[0] : text);
+        } catch (err: any) {
+            console.warn(`[AI] Gemini model ${modelName} failed:`, err?.message || err);
+            lastError = err;
         }
     }
 
-    console.error('All vision models failed:', lastError);
+    console.error('[AI] All Gemini image analysis models failed:', lastError?.message);
     return {
         summary: `Failed to analyze image. Error: ${lastError?.message || 'Unknown error'}`,
         keyPoints: []
