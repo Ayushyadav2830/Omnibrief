@@ -81,19 +81,39 @@ export async function POST(request: NextRequest) {
             // 2. Pure JS Node.js fallback using @distube/ytdl-core if system yt-dlp fails or is missing
             if (!downloaded) {
                 try {
-                    const info = await ytdl.getInfo(url);
+                    let agent: any = undefined;
+                    if (process.env.YOUTUBE_COOKIE) {
+                        try {
+                            const raw = process.env.YOUTUBE_COOKIE.trim();
+                            const cookies = raw.startsWith('[') ? JSON.parse(raw) : JSON.parse(Buffer.from(raw, 'base64').toString('utf-8'));
+                            agent = ytdl.createAgent(cookies);
+                            console.log('[URL] Initialized YouTube agent with provided cookies');
+                        } catch (e) {
+                            console.warn('[URL] Failed to parse YOUTUBE_COOKIE JSON:', e);
+                        }
+                    }
+
+                    const info = await ytdl.getInfo(url, agent ? { agent } : undefined);
                     const title = info.videoDetails?.title ? info.videoDetails.title.replace(/[^\w\s]/gi, '') : fileId;
                     originalName = `${title}.mp4`;
                     tempFilePath = join(uploadsDir, `${fileId}.mp4`);
 
-                    const audioStream = ytdl(url, { filter: 'audioonly', quality: 'highestaudio' });
+                    const audioStream = ytdl(url, {
+                        filter: 'audioonly',
+                        quality: 'highestaudio',
+                        ...(agent ? { agent } : {})
+                    });
                     const fileStream = createWriteStream(tempFilePath);
                     await pipeline(audioStream, fileStream);
                     mimeType = 'audio/mp4';
                     downloaded = true;
                 } catch (ytdlError: any) {
                     console.error('[URL] ytdl-core fallback failed:', ytdlError);
-                    throw new Error(`Failed to download YouTube video: ${ytdlError.message || 'Stream download failed'}`);
+                    const msg = ytdlError?.message || '';
+                    if (msg.includes('Sign in to confirm you’re not a bot') || msg.includes('bot')) {
+                        throw new Error('YouTube bot verification detected on server. Please upload the audio/video file directly via "Upload File", or add YOUTUBE_COOKIE to Vercel environment variables.');
+                    }
+                    throw new Error(`Failed to download YouTube video: ${msg || 'Stream download failed'}`);
                 }
             }
 
