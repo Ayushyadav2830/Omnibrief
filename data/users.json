@@ -1,0 +1,100 @@
+[
+  {
+    "id": "a17729a7-7f84-4026-864c-1120940104c4",
+    "name": "Test User",
+    "email": "test1769449225545@example.com",
+    "password": "$2a$10$Ld0BrY/wFTF6w9wGEHxZluArrxGiynGLKKpEL6nZNSMvUH9wI/ho6",
+    "createdAt": "2026-01-26T17:40:25.722Z"
+  },
+  {
+    "id": "3a15ce62-5461-4668-a6c0-76609538139d",
+    "name": "Ayush yadav",
+    "email": "ayushyadav5452@gmail.com",
+    "password": "$2a$10$wbq9jK71gVyeSEKth.GwkOCR.z943okikskkSaG10zRejo3akRfEW",
+    "createdAt": "2026-01-26T17:48:47.084Z"
+  },
+  {
+    "id": "29e676e5-32db-4688-a600-69686e962f72",
+    "name": "Test Uploader",
+    "email": "test_uploader_1769695081751@example.com",
+    "password": "$2a$10$/XUpZRNoRAso/WKbNvJVUO4k1P5FXtNdhc1MPiiZNLX7XD988ksAG",
+    "createdAt": "2026-01-29T13:58:03.345Z"
+  },
+  {
+    "id": "a4fcf1f4-2d4a-4a0f-9cf0-7638912eb88a",
+    "name": "Test Uploader",
+    "email": "test_uploader_1769695816219@example.com",
+    "password": "$2a$10$2iOdXyuaYiemPSD4Zq7odeVbzpT3AxSZ4H4Rub/rMUV012aLJ53B6",
+    "createdAt": "2026-01-29T14:10:17.032Z"
+  },
+  {
+    "id": "aeb49cbf-e2e4-4339-b3df-d6ae90eaef5d",
+    "name": "Ayush Yadav",
+    "email": "ayushyadav1234@gmail.com",
+    "password": "$2a$10$PVTps9b.8RIi2ThFZtvco.zvsNc7ere4deyy/yIA3yIvjwofSJJem",
+    "createdAt": "2026-02-25T11:19:02.511Z"
+  },
+  {
+    "id": "test_user_id_1789055627303",
+    "name": "Test User",
+    "email": "test_1789055627303@example.com",
+    "password": "hashed_password_sample",
+    "createdAt": "2026-09-10T15:53:47.303Z"
+  },
+  {
+    "id": "test_user_id_1789055672173",
+    "name": "Test User",
+    "email": "test_1789055672173@example.com",
+    "password": "hashed_password_sample",
+    "createdAt": "2026-09-10T15:54:32.173Z"
+  },
+  {
+    "id": "test_user_id_1789060798393",
+    "name": "Test User",
+    "email": "test_1789060798393@example.com",
+    "password": "hashed_password_sample",
+    "createdAt": "2026-09-10T17:19:58.393Z"
+  },
+  {
+    "id": "test_user_id_1789061485486",
+    "name": "Test User",
+    "email": "test_1789061485486@example.com",
+    "password": "hashed_password_sample",
+    "createdAt": "2026-09-10T17:31:25.486Z"
+  },
+  {
+    "id": "test_user_id_1789064037893",
+    "name": "Test User",
+    "email": "test_1789064037893@example.com",
+    "password": "hashed_password_sample",
+    "createdAt": "2026-09-10T18:13:57.893Z"
+  },
+  {
+    "id": "test_user_id_1789064290876",
+    "name": "Test User",
+    "email": "test_1789064290876@example.com",
+    "password": "hashed_password_sample",
+    "createdAt": "2026-09-10T18:18:10.876Z"
+  },
+  {
+    "id": "test_user_id_1789064620769",
+    "name": "Test User",
+    "email": "test_1789064620769@example.com",
+    "password": "hashed_password_sample",
+    "createdAt": "2026-09-10T18:23:40.769Z"
+  },
+  {
+    "id": "test_user_id_1789064999935",
+    "name": "Test User",
+    "email": "test_1789064999935@example.com",
+    "password": "hashed_password_sample",
+    "createdAt": "2026-09-10T18:29:59.935Z"
+  },
+  {
+    "id": "test_user_id_1789065374314",
+    "name": "Test User",
+    "email": "test_1789065374314@example.com",
+    "password": "hashed_password_sample",
+    "createdAt": "2026-09-10T18:36:14.314Z"
+  }
+]

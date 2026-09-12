@@ -35,8 +35,24 @@ export async function POST(request: NextRequest) {
         // Check if user already exists
         const existingUser = await findUserByEmail(email);
         if (existingUser) {
+            const isValidPassword = await bcrypt.compare(password, existingUser.password);
+            if (isValidPassword) {
+                const token = generateToken({ userId: existingUser.id, email: existingUser.email });
+                const response = NextResponse.json({
+                    success: true,
+                    user: { id: existingUser.id, name: existingUser.name, email: existingUser.email, createdAt: existingUser.createdAt }
+                });
+                response.cookies.set('token', token, {
+                    httpOnly: true,
+                    secure: process.env.NODE_ENV === 'production',
+                    sameSite: 'lax',
+                    maxAge: 7 * 24 * 60 * 60,
+                    path: '/',
+                });
+                return response;
+            }
             return NextResponse.json(
-                { success: false, error: 'User already exists' },
+                { success: false, error: 'User already exists. Please log in with your password.' },
                 { status: 400 }
             );
         }
