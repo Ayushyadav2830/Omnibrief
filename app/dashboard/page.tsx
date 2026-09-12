@@ -152,6 +152,10 @@ export default function DashboardPage() {
                             reject(new Error('Invalid response format'));
                         }
                     } else {
+                        if (xhr.status === 413) {
+                            reject(new Error('File size exceeds Vercel limit (4.5MB). Please upload the Audio (.mp3) version of the video instead, which is much smaller and processes instantly!'));
+                            return;
+                        }
                         try {
                             const errorData = JSON.parse(xhr.responseText);
                             reject(new Error(errorData.message || errorData.error || `Upload failed with status ${xhr.status}`));
