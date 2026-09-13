@@ -2,17 +2,18 @@
 # ⚡ OmniBrief
 ### **Transform Hours of Content into Instant Insights**
 
-[![CI Build & Test](https://github.com/Ayushyadav2830/Omnibrief/actions/workflows/ci.yml/badge.svg)](https://github.com/Ayushyadav2830/Omnibrief/actions) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![CI Build & Test](https://github.com/Ayushyadav2830/Omnibrief/actions/workflows/ci.yml/badge.svg)](https://github.com/Ayushyadav2830/Omnibrief/actions) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) [![Live Demo](https://img.shields.io/badge/Live_Demo-Vercel-000000?style=flat&logo=vercel)](https://omnibrief-nine.vercel.app)
 
 ![OmniBrief Banner](public/dashboard-preview.png)
 
+> 🚀 **Live Demo**: [https://omnibrief-nine.vercel.app](https://omnibrief-nine.vercel.app)  
 > **OmniBrief** is a premium, AI-powered intelligence dashboard that analyzes your documents, images, audio, and videos to provide actionable summaries, key takeaways, and deep insights.
 
 ---
 
 ## ✨ Why OmniBrief?
 
-OmniBrief isn't just a summarizer; it's your personal AI research assistant. By combining the speed of **Groq** with the deep multimodal understanding of **Google Gemini 1.5**, we deliver results that are both fast and accurate.
+OmniBrief isn't just a summarizer; it's your personal AI research assistant. By combining the speed of **Groq** with the deep multimodal understanding of **Google Gemini (3.6 Flash / 1.5)**, we deliver results that are both fast and accurate.
 
 ### 🌟 Key Features
 
@@ -23,8 +24,8 @@ OmniBrief isn't just a summarizer; it's your personal AI research assistant. By 
 - **🔗 Web & YouTube**: Paste any valid YouTube URL for instant video analysis—no manual download required.
 
 #### 🧠 **Advanced Dual-AI Engine**
-- **Google Gemini 1.5 Flash**: Powers deep media understanding, enabling **Speaker Identification**, **Smart Chapters**, and complex visual analysis.
-- **Groq (Llama 3.3 & Whisper)**: Delivers lightning-fast text summaries and robust fallback transcription.
+- **Google Gemini 3.6 Flash**: Powers deep media & vision understanding, enabling **Speaker Identification**, **Smart Chapters**, and complex visual analysis.
+- **Groq (Llama 3.3 & Whisper-v3)**: Delivers lightning-fast text summaries and robust fallback transcription.
 
 #### 🛠️ **Smart Processing Pipeline**
 - **Auto-Optimization**: Automatically cleans, normalizes, and compresses audio to handle large files (up to ~90 mins) without quality loss.
@@ -137,7 +138,7 @@ flowchart TD
 
     subgraph AI ["Dual AI Orchestration Engine"]
         GROQ["Groq API (Llama 3.3 & Whisper-v3)"]
-        GEMINI["Google Gemini 1.5 Flash (Multimodal & Chapters)"]
+        GEMINI["Google Gemini 3.6 Flash (Multimodal & Vision AI)"]
     end
 
     subgraph Storage ["Persistence Layer"]
@@ -173,7 +174,7 @@ OmniBrief is built with a modern, scalable stack:
   - `pdf-parse` / `mammoth`: Document text extraction
 - **AI Layers**:
   - **Orchestration**: Custom fallback logic ensuring 99.9% reliability
-  - **Models**: Llama 3.3 (Text), Whisper-v3 (Audio), Gemini 1.5 Flash (Multimodal)
+  - **Models**: Llama 3.3 (Text), Whisper-v3 (Audio), Google Gemini 3.6 Flash (Multimodal & Vision AI)
 - **Testing**: Vitest test suite (`__tests__/`) for unit coverage
 
 ---

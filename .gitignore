@@ -38,7 +38,8 @@ next-env.d.ts
 /public/uploads
 
 # database
-# (tracked for serverless baseline)
+# (users.json tracked for serverless baseline)
+data/summaries.json
 
 # temporary & media files
 /tmp
