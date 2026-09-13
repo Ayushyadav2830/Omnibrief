@@ -31,11 +31,11 @@ export default function DashboardPage() {
                     fetchHistory();
                 } else {
                     document.cookie = 'token=; Max-Age=0; path=/;';
-                    window.location.href = '/auth/login';
+                    window.location.href = '/';
                 }
             } catch (err) {
                 document.cookie = 'token=; Max-Age=0; path=/;';
-                window.location.href = '/auth/login';
+                window.location.href = '/';
             }
         };
 

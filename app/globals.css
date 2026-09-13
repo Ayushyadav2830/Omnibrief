@@ -293,13 +293,93 @@ body::before {
   line-height: 1.5;
 }
 
+/* ── Feature card interactive enhancement ─── */
+.feature-card-interactive {
+  cursor: pointer;
+  transition: transform var(--transition-base), border-color var(--transition-base), box-shadow var(--transition-base);
+}
+
+.feature-card-interactive:hover {
+  transform: translateY(-5px);
+  border-color: rgba(129, 140, 248, 0.4);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(129, 140, 248, 0.2);
+}
+
+.feature-action-hint {
+  display: inline-block;
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--primary-light);
+  opacity: 0.8;
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+}
+
+.feature-card-interactive:hover .feature-action-hint {
+  opacity: 1;
+  transform: translateX(3px);
+}
+
+/* ── Service Note Banner ─────────────────── */
+.service-note-banner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  border-radius: 9999px;
+  padding: 0.55rem 1.35rem;
+  margin: 1.5rem auto 0.5rem;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.12);
+  animation: note-pulse 3s infinite ease-in-out;
+  max-width: 90%;
+}
+
+.service-note-badge {
+  background: linear-gradient(135deg, var(--primary-dark), #4f46e5);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+}
+
+.service-note-text {
+  font-size: clamp(0.85rem, 1.4vw, 0.95rem);
+  color: #cbd5e1;
+  letter-spacing: 0.01em;
+}
+
+.service-note-text strong {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+@keyframes note-pulse {
+  0%, 100% {
+    border-color: rgba(99, 102, 241, 0.3);
+    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.1);
+  }
+  50% {
+    border-color: rgba(129, 140, 248, 0.65);
+    box-shadow: 0 4px 25px rgba(129, 140, 248, 0.25);
+  }
+}
+
 /* ── CTA row ─────────────────────────────── */
 .cta-row {
   display: flex;
   gap: clamp(0.75rem, 2vw, 1rem);
   justify-content: center;
   flex-wrap: wrap;
-  margin-top: clamp(1.5rem, 3vw, 2.5rem);
+  margin-top: clamp(1.25rem, 2.5vw, 1.75rem);
 }
 
 .cta-btn {

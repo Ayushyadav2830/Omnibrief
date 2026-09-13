@@ -6,15 +6,20 @@ import { useRouter } from 'next/navigation';
 export default function HomePage() {
     const router = useRouter();
     const [mounted, setMounted] = useState(false);
+    const [user, setUser] = useState<any>(null);
 
     useEffect(() => {
         setMounted(true);
-        // Check if user is logged in
-        const user = localStorage.getItem('user');
-        if (user) {
-            router.push('/dashboard');
+        // Check if user session exists without auto-redirecting
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+            try {
+                setUser(JSON.parse(storedUser));
+            } catch (e) {
+                setUser(null);
+            }
         }
-    }, [router]);
+    }, []);
 
     if (!mounted) return null;
 
@@ -61,30 +66,67 @@ export default function HomePage() {
                     {/* Feature Cards — always 3 per row */}
                     <div className="feature-grid">
                         {features.map((f) => (
-                            <div className="glass-card feature-card" key={f.title}>
+                            <div 
+                                className="glass-card feature-card feature-card-interactive" 
+                                key={f.title}
+                                onClick={() => router.push(user ? '/dashboard' : '/auth/login')}
+                                role="button"
+                                tabIndex={0}
+                                title={user ? `Open ${f.title} in Dashboard` : `Sign In / Log In to use ${f.title}`}
+                            >
                                 <div className="feature-icon" style={{ background: f.gradient }}>
                                     {f.icon}
                                 </div>
                                 <h3 className="feature-title">{f.title}</h3>
                                 <p className="feature-desc">{f.desc}</p>
+                                <span className="feature-action-hint">
+                                    {user ? 'Open in Dashboard →' : 'Sign In to use →'}
+                                </span>
                             </div>
                         ))}
                     </div>
 
+                    {/* Notice / Service Note */}
+                    <div className="service-note-banner">
+                        <span className="service-note-badge">NOTE</span>
+                        <span className="service-note-text">
+                            Please <strong>Sign In / Log In</strong> to use these services.
+                        </span>
+                    </div>
+
                     {/* CTA Buttons */}
                     <div className="cta-row">
-                        <button
-                            className="btn btn-primary cta-btn"
-                            onClick={() => router.push('/auth/register')}
-                        >
-                            Get Started Free
-                        </button>
-                        <button
-                            className="btn btn-outline cta-btn"
-                            onClick={() => router.push('/auth/login')}
-                        >
-                            Sign In
-                        </button>
+                        {user ? (
+                            <>
+                                <button
+                                    className="btn btn-primary cta-btn"
+                                    onClick={() => router.push('/dashboard')}
+                                >
+                                    Go to Dashboard →
+                                </button>
+                                <button
+                                    className="btn btn-outline cta-btn"
+                                    onClick={() => router.push('/auth/login')}
+                                >
+                                    Sign In / Log In
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <button
+                                    className="btn btn-primary cta-btn"
+                                    onClick={() => router.push('/auth/register')}
+                                >
+                                    Get Started Free
+                                </button>
+                                <button
+                                    className="btn btn-outline cta-btn"
+                                    onClick={() => router.push('/auth/login')}
+                                >
+                                    Sign In / Log In
+                                </button>
+                            </>
+                        )}
                     </div>
 
                     {/* Stats */}
