@@ -6,19 +6,9 @@ import { useRouter } from 'next/navigation';
 export default function HomePage() {
     const router = useRouter();
     const [mounted, setMounted] = useState(false);
-    const [user, setUser] = useState<any>(null);
 
     useEffect(() => {
         setMounted(true);
-        // Check if user session exists without auto-redirecting
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-            try {
-                setUser(JSON.parse(storedUser));
-            } catch (e) {
-                setUser(null);
-            }
-        }
     }, []);
 
     if (!mounted) return null;
@@ -69,19 +59,16 @@ export default function HomePage() {
                             <div 
                                 className="glass-card feature-card feature-card-interactive" 
                                 key={f.title}
-                                onClick={() => router.push(user ? '/dashboard' : '/auth/login')}
+                                onClick={() => router.push('/auth/login')}
                                 role="button"
                                 tabIndex={0}
-                                title={user ? `Open ${f.title} in Dashboard` : `Sign In / Log In to use ${f.title}`}
+                                title={`Sign In / Log In to use ${f.title}`}
                             >
                                 <div className="feature-icon" style={{ background: f.gradient }}>
                                     {f.icon}
                                 </div>
                                 <h3 className="feature-title">{f.title}</h3>
                                 <p className="feature-desc">{f.desc}</p>
-                                <span className="feature-action-hint">
-                                    {user ? 'Open in Dashboard →' : 'Sign In to use →'}
-                                </span>
                             </div>
                         ))}
                     </div>
@@ -96,37 +83,18 @@ export default function HomePage() {
 
                     {/* CTA Buttons */}
                     <div className="cta-row">
-                        {user ? (
-                            <>
-                                <button
-                                    className="btn btn-primary cta-btn"
-                                    onClick={() => router.push('/dashboard')}
-                                >
-                                    Go to Dashboard →
-                                </button>
-                                <button
-                                    className="btn btn-outline cta-btn"
-                                    onClick={() => router.push('/auth/login')}
-                                >
-                                    Sign In / Log In
-                                </button>
-                            </>
-                        ) : (
-                            <>
-                                <button
-                                    className="btn btn-primary cta-btn"
-                                    onClick={() => router.push('/auth/register')}
-                                >
-                                    Get Started Free
-                                </button>
-                                <button
-                                    className="btn btn-outline cta-btn"
-                                    onClick={() => router.push('/auth/login')}
-                                >
-                                    Sign In / Log In
-                                </button>
-                            </>
-                        )}
+                        <button
+                            className="btn btn-primary cta-btn"
+                            onClick={() => router.push('/auth/register')}
+                        >
+                            Get Started Free
+                        </button>
+                        <button
+                            className="btn btn-outline cta-btn"
+                            onClick={() => router.push('/auth/login')}
+                        >
+                            Sign In / Log In
+                        </button>
                     </div>
 
                     {/* Stats */}
